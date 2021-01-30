@@ -4,3 +4,5 @@ numpy
 matplotlib
 flake8
 autopep8
+numba
+mss

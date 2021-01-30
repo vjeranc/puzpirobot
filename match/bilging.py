@@ -2,8 +2,10 @@ import cv2 as cv
 import match.template_matching as tm
 import time
 import multiprocessing.dummy as multiprocessing
-from PIL import ImageGrab
-import numpy as np 
+import optimize.search as s
+import numpy as np
+import matplotlib.pyplot as plt
+
 _POOL = multiprocessing.Pool(processes=8)
 
 _W = 275
@@ -55,19 +57,40 @@ def get_board_state(b_rec, patterns):
             if board[i][j] != _NONE:
                 print('warning clash:', (i, j), board[i][j], p.name)
             board[i][j] = p.name
-    print('exec time:', time.time() - s)
+    return board
+
+
+def repr_board(board):
     return '\n'.join(''.join(row) for row in board)
+
+
+_COLORS = [(0, 0, 255), (255, 255, 255), (255, 0, 0), (50, 50, 50)]
+
+
+def draw_sol(img, moves):
+    img = img.copy()
+    for (idx, (i, j)) in enumerate(moves):
+        cv.rectangle(img, (j * _RH, i * _RW), ((j + 1) * _RH, (i + 1) * _RW), 
+                     _COLORS[idx % len(_COLORS)], thickness=cv.FILLED)
+    plt.imshow(cv.cvtColor(img, cv.COLOR_BGR2RGB))
+    plt.draw()
+    plt.pause(0.001)
 
 
 def track_board_state(screen_grabber, patterns):
     img_src = screen_grabber.grab()
     b_rec, (y, y1), (x, x1) = get_bilging_rectangle(img_src)
-    state = None
+    repr_state = None
+    plt.ion()
     while True:
         new_state = get_board_state(img_src[y:y1, x:x1], patterns)
-        if new_state != state:
-            print('=======================================')
-            print(new_state)
-            state = new_state
-        time.sleep(1)
-        img_src = screen_grabber.grab()
+        repr_new_state = repr_board(new_state)
+        if repr_new_state != repr_state:
+            if not np.count_nonzero(np.array(repr_new_state) == '_'):
+                cnt, l, moves = s.find_best_move(new_state, depth=3)[0]
+                print(moves)
+                draw_sol(img_src[y:y1, x:x1], moves)
+                repr_state = repr_new_state
+                continue
+        time.sleep(0.2)
+        img_src = screen_grabber.grab() 
