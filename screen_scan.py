@@ -44,4 +44,4 @@ paths = [("A", './images/whiteblue_square.png', True, 0.9),
 patterns = [tm.build_pattern(p, n, shape=(45, 45), circle_mask=c, threshold=t) 
             for n, p, c, t in paths]
 
-b.track_board_state(FastScreenGrabber(), patterns)
+b.track_board_state(ScreenshotGrabber(), patterns)

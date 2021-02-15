@@ -2,6 +2,9 @@ from collections import namedtuple
 import cv2 as cv
 from matplotlib import pyplot as plt
 import numpy as np
+from numba import jit
+import time
+
 
 _MATCHING_THRESHOLD = 0.9
 
@@ -36,7 +39,10 @@ def create_mask(transparent_img, thresh=cv.THRESH_BINARY):
     return cv.threshold(transparent_img[:, :, 3], 0, 255, thresh)
 
 
+@jit
 def find_piece(img, pattern, coeff=cv.TM_CCOEFF_NORMED):
+    # matchTempalte for full image is a bit slow because piece pattern is tried
+    # outside of the regular grid boundaries
     res = cv.matchTemplate(img, pattern.piece, coeff, mask=pattern.mask)
     loc = np.where(res >= pattern.threshold)
     return [pt for pt in zip(*loc[::-1])]
