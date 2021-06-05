@@ -55,6 +55,7 @@ def update_counts(num_board, cnts, i, j, move):
         return
     cnts[i, j, :] = 0
     x, y = move  # one is 1, other is 0
+    # 1,2 moves in pos direction, 1,2 moves in opposite direction
     for m in (1, 2, -1, -2):
         am = abs(m)
         x1 = x * m
@@ -62,7 +63,7 @@ def update_counts(num_board, cnts, i, j, move):
         if not in_range(i + x1, n) or not in_range(j + y1, q):
             continue
         el = num_board[i + x1, j + y1]
-        if abs(m) != 2:
+        if am != 2:
             cnts[i, j, el] += 1
             continue
         # if preceding neighbor did not have this element then skip
@@ -131,7 +132,7 @@ def find_best_move(board, depth=3):
             if num_board[x, y] == num_board[x, y + 1]:
                 continue
             cnt, moves = dfs(x, y, d - 1)
-            if cnt > max_cnt:
+            if (-cnt, len(moves) + 1) < (-max_cnt, len(max_moves)):
                 max_moves = [(i, j)] + moves
                 max_cnt = cnt
         undo_swap(num_board, ss, i, j)
